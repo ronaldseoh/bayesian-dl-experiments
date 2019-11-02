@@ -13,7 +13,22 @@ class UCIDatasets(Dataset):
             'url': "http://archive.ics.uci.edu/ml/machine-learning-databases/00243/yacht_hydrodynamics.data",
             'features': np.arange(6),
             'targets': [6],
-        }
+        },
+         'bostonHousing': {
+            'url': "https://archive.ics.uci.edu/ml/machine-learning-databases/housing/housing.data",
+            'features': np.arange(13),
+            'targets': [13],
+        },
+         'power-plant': {
+            'url': "https://github.com/ronaldseoh/DropoutUncertaintyExps/raw/master/UCI_Datasets/power-plant/data/data.txt",
+            'features': np.arange(4),
+            'targets': [4],
+        },
+         'naval-propulsion-plant': {
+            'url': "https://github.com/ronaldseoh/DropoutUncertaintyExps/raw/master/UCI_Datasets/naval-propulsion-plant/data/data.txt",
+            'features': np.arange(16),
+            'targets': [16],
+        },
     }
 
     def __init__(self, dataset_name, root_dir, transform=None, download=True):
@@ -38,7 +53,7 @@ class UCIDatasets(Dataset):
         self.targets = self.uci_dataset_configs[self.dataset_name]['targets']
 
     def __len__(self):
-        return len(self.landmarks_frame)
+        return len(self.data)
 
     def __getitem__(self, idx):
         if torch.is_tensor(idx):
