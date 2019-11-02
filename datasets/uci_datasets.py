@@ -42,10 +42,11 @@ class UCIDatasets(Dataset):
         self.filename = os.path.basename(urlparse(self.url).path)
 
         if download:
+            os.makedirs(os.path.join(self.root_dir, self.dataset_name), exist_ok=True)
             self.download()
 
         # Process the downloaded data
-        fp = os.path.join(self.root_dir, self.filename)
+        fp = os.path.join(self.root_dir, self.dataset_name, self.filename)
         self.data = np.loadtxt(fp)
 
         # Store feature / target columns
@@ -64,4 +65,4 @@ class UCIDatasets(Dataset):
         return sample
 
     def download(self):
-        download_url(self.url, self.root_dir, self.filename)
+        download_url(self.url, self.root_dir, os.path.join(self.dataset_name, self.filename))
