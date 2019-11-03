@@ -47,7 +47,7 @@ class UCIDatasets(Dataset):
 
         # Process the downloaded data
         fp = os.path.join(self.root_dir, self.dataset_name, self.filename)
-        self.data = np.loadtxt(fp)
+        self.data = torch.Tensor(np.loadtxt(fp))
 
         # Store feature / target columns
         self.features = self.uci_dataset_configs[self.dataset_name]['features']
