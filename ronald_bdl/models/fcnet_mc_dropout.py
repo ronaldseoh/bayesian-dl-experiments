@@ -4,8 +4,10 @@ from .fcnet import FCNet
 
 class FCNetMCDropout(FCNet):
 
-    def __init__(self, input_dim, output_dim, hidden_dim, n_hidden, n_predictions):
-        super().__init__(input_dim, output_dim, hidden_dim, n_hidden)
+    def __init__(
+        self, input_dim, output_dim, hidden_dim, n_hidden, dropout_rate, n_predictions):
+        super(FCNetMCDropout, self).__init__(
+            input_dim, output_dim, hidden_dim, n_hidden, dropout_rate)
 
         self.n_predictions = n_predictions
 
