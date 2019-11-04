@@ -16,7 +16,7 @@ class FCNetMCDropout(FCNet):
         # No gradient computation needed for predictions, mean, and var
         # Refer to https://pytorch.org/docs/stable/autograd.html#locally-disable-grad
         with torch.no_grad():
-            predictions = torch.cat([self.forward(X_test) for _ in range(self.n_predictions)])
+            predictions = torch.stack([self.forward(X_test) for _ in range(self.n_predictions)])
 
             mean = torch.mean(predictions, 0)
             var = torch.var(predictions, 0)
@@ -33,7 +33,7 @@ class FCNetMCDropout(FCNet):
 
                 # test log-likelihood
                 metrics['test_ll'] = torch.mean(
-                    torch.logsumexp(- torch.tensor(0.5) * reg_strength * torch.pow(y_test - predictions, 2), 0)
+                    torch.logsumexp(- torch.tensor(0.5) * reg_strength * torch.pow(y_test[None] - predictions, 2), 0)
                     - torch.log(torch.tensor(self.n_predictions, dtype=torch.float))
                     - torch.tensor(0.5) * torch.log(torch.tensor(2 * np.pi, dtype=torch.float)) 
                     + torch.tensor(0.5) * torch.log(reg_strength)
