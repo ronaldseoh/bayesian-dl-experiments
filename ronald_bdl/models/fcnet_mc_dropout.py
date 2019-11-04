@@ -12,9 +12,12 @@ class FCNetMCDropout(FCNet):
         self.n_predictions = n_predictions
 
     def mc_predict(self, x_test):
-        predictions = torch.cat([self.forward(x_test) for _ in range(self.n_predictions)])
+        # No gradient computation needed for predictions, mean, and var
+        # Refer to https://pytorch.org/docs/stable/autograd.html#locally-disable-grad
+        with torch.no_grad():
+            predictions = torch.cat([self.forward(x_test) for _ in range(self.n_predictions)])
 
-        mean = torch.mean(predictions, 0)
-        var = torch.var(predictions, 0)
+            mean = torch.mean(predictions, 0)
+            var = torch.var(predictions, 0)
 
         return predictions, mean, var
