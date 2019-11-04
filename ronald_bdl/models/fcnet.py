@@ -23,8 +23,8 @@ class FCNet(nn.Module):
         # Output
         self.output = nn.Linear(hidden_dim, output_dim)
 
-    def forward(self, x):
-        activation = F.relu(F.dropout(self.input(x), p=self.dropout_rate))
+    def forward(self, X):
+        activation = F.relu(F.dropout(self.input(X), p=self.dropout_rate))
 
         for hidden in self.hidden_layers:
             activation = F.relu(F.dropout(hidden(activation), p=self.dropout_rate))
