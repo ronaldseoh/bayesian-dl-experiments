@@ -27,10 +27,14 @@ class FCNetMCDropout(FCNet):
                 reg_strength = torch.tensor(kwargs['reg_strength'], dtype=torch.float)
 
                 # RMSE
-                metrics['rmse'] = torch.sqrt(torch.mean(torch.pow(y_test - mean, 2)))
+                metrics['rmse_mc'] = torch.sqrt(torch.mean(torch.pow(y_test - mean, 2)))
+
+                # RMSE (Non-MC)
+                prediction_non_mc = self.forward(X_test)
+                metrics['rmse_non_mc'] = torch.sqrt(torch.mean(torch.pow(y_test - prediction_non_mc, 2)))
 
                 # test log-likelihood
-                metrics['test_ll'] = torch.mean(
+                metrics['test_ll_mc'] = torch.mean(
                     torch.logsumexp(- torch.tensor(0.5) * reg_strength * torch.pow(y_test[None] - predictions, 2), 0)
                     - torch.log(torch.tensor(n_predictions, dtype=torch.float))
                     - torch.tensor(0.5) * torch.log(torch.tensor(2 * np.pi, dtype=torch.float)) 
