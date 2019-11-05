@@ -60,7 +60,12 @@ class UCIDatasets(Dataset):
         if torch.is_tensor(idx):
             idx = idx.tolist()
 
-        sample = (self.data[idx][self.features], self.data[idx][self.targets])
+        if type(idx) != list:
+            idx_list = [idx]
+        else:
+            idx_list = idx
+    
+        sample = (self.data[idx_list][:, self.features], self.data[idx_list][:, self.targets])
 
         return sample
 
