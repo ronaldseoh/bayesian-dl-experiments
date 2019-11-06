@@ -3,7 +3,7 @@ from urllib.parse import urlparse
 
 import numpy as np
 import torch
-from torch.utils.data import DataLoader, Dataset, random_split
+from torch.utils.data import Dataset
 from torchvision.datasets.utils import download_url
 
 class UCIDatasets(Dataset):
