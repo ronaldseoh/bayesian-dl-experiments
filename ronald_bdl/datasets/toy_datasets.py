@@ -15,15 +15,15 @@ class ToyDatasets(Dataset):
         # https://github.com/pawni/BayesByHypernet/blob/master/toy_data.ipynb
         # https://pytorch.org/docs/master/tensors.html#torch.Tensor.uniform_
         # https://pytorch.org/docs/master/tensors.html#torch.Tensor.normal_
-        self.data_x = torch.empty(n_samples,).uniform_(x_low, x_high, generator=self._generator)
-        self.data_y = torch.pow(self.data_x, 3) + torch.empty(n_samples,).normal_(
+        self.data_x = torch.empty(n_samples, 1).uniform_(x_low, x_high, generator=self._generator)
+        self.data_y = torch.pow(self.data_x, 3) + torch.empty(n_samples, 1).normal_(
             mean=y_mean, std=y_std, generator=self._generator)
 
         self.n_features = self.data_x.shape[1]
         self.n_targets = self.data_y.shape[1]
 
     def __len__(self):
-        return len(self.data)
+        return len(self.data_y)
 
     def __getitem__(self, idx):
         if torch.is_tensor(idx):
