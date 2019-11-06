@@ -3,7 +3,7 @@ from torch.utils.data import Dataset
 
 class ToyDatasets(Dataset):
 
-    def __init__(self, random_seed=691, n_samples=50, 
+    def __init__(self, random_seed=691, n_samples=50,
                  low=-5, high=5, mean=0, std=9, transform=None):
 
         self.transform = transform
@@ -18,6 +18,9 @@ class ToyDatasets(Dataset):
         self.data_x = torch.empty(n_samples,).uniform_(low, high, generator=self._generator)
         self.data_y = torch.pow(self.data_x, 3) + torch.empty(n_samples,).normal_(
             mean=mean, std=std, generator=self._generator)
+
+        self.n_features = self.data_x.shape[1]
+        self.n_targets = self.data_y.shape[1]
 
     def __len__(self):
         return len(self.data)

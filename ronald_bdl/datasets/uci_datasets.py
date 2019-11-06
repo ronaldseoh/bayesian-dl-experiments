@@ -51,7 +51,9 @@ class UCIDatasets(Dataset):
 
         # Store feature / target columns
         self.features = self.uci_dataset_configs[self.dataset_name]['features']
+        self.n_features = len(self.features)
         self.targets = self.uci_dataset_configs[self.dataset_name]['targets']
+        self.n_targets = len(self.targets)
 
     def __len__(self):
         return len(self.data)
