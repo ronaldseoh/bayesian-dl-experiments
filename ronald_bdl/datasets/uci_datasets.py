@@ -32,7 +32,7 @@ class UCIDatasets(Dataset):
     }
 
     def __init__(
-        self, dataset_name, root_dir, limit_size=None, transform=None, download=True, pin_memory=True):
+        self, dataset_name, root_dir, limit_size=None, transform=None, download=True, pin_memory=False):
 
         self.dataset_name = dataset_name
         self.root_dir = root_dir
@@ -61,7 +61,9 @@ class UCIDatasets(Dataset):
             random_indexes = np.random.randint(low=0, high=len(self.data), size=size)
             self.data = self.data[random_indexes]
 
-        if pin_memory: self.data.pin_memory()
+        # Use pin_memory() (use non-paged memory) for fast GPU transfer
+        if pin_memory:
+            self.data.pin_memory()
 
         # Store feature / target columns
         self.features = self.uci_dataset_configs[self.dataset_name]['features']
