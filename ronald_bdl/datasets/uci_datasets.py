@@ -29,6 +29,11 @@ class UCIDatasets(Dataset):
             'features': np.arange(16),
             'targets': [16],
         },
+         'protein-tertiary-structure': {
+            'url': "https://github.com/ronaldseoh/DropoutUncertaintyExps/raw/master/UCI_Datasets/protein-tertiary-structure/data/data.txt",
+            'features': np.arange(9),
+            'targets': [9],
+        },
     }
 
     def __init__(
