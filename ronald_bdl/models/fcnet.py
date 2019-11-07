@@ -1,6 +1,8 @@
 import torch.nn.functional as F
 import torch.nn as nn
 
+from .dropout_custom import create_dropout_layer
+
 class FCNet(nn.Module):
 
     def __init__(self, input_dim, output_dim, hidden_dim, n_hidden, **kwargs):
@@ -13,16 +15,11 @@ class FCNet(nn.Module):
             self.dropout_rate = kwargs['dropout_rate']
             self.dropout_type = kwargs['dropout_type']
 
-            if self.dropout_type == 'bernoulli':
-                self.dropout_layer = nn.Dropout(self.dropout_rate)
-            elif self.dropout_type == 'variational':
-                from .dropout_custom import VariationalDropout
+            if self.dropout_type == 'variational':
                 self.dropout_variational_dim = kwargs['dropout_variational_dim']
-                self.dropout_layer = VariationalDropout(self.dropout_rate, self.dropout_variational_dim)
-        else:
-            # No dropout at all
-            self.dropout_layer = nn.Identity()
-
+            else:
+                self.dropout_variational_dim = None
+    
         # Setup layers
         # Input layer
         self.input = nn.Linear(input_dim, hidden_dim)
@@ -46,9 +43,11 @@ class FCNet(nn.Module):
         nn.init.zeros_(self.output.bias)        
 
     def forward(self, X):
-        activation = F.relu(self.dropout_layer(self.input(X)))
+        dropout_input = create_dropout_layer(self.dropout_rate, self.dropout_type, self.dropout_variational_dim)
+        activation = F.relu(dropout_input(self.input(X)))
 
         for hidden in self.hidden_layers:
-            activation = F.relu(self.dropout_layer(hidden(activation)))
+            dropout_hidden = create_dropout_layer(self.dropout_rate, self.dropout_type, self.dropout_variational_dim)
+            activation = F.relu(dropout_hidden(hidden(activation)))
 
         return self.output(activation)
