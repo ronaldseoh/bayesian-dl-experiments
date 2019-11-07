@@ -31,7 +31,7 @@ class UCIDatasets(Dataset):
         },
     }
 
-    def __init__(self, dataset_name, root_dir, transform=None, download=True):
+    def __init__(self, dataset_name, root_dir, limit_size=None, transform=None, download=True):
 
         self.dataset_name = dataset_name
         self.root_dir = root_dir
@@ -47,7 +47,18 @@ class UCIDatasets(Dataset):
 
         # Process the downloaded data
         fp = os.path.join(self.root_dir, self.dataset_name, self.filename)
+
         self.data = torch.Tensor(np.loadtxt(fp))
+
+        # Randomly re-sample the dataset if limit_size is given
+        if limit_size is not None:
+            if isinstance(limit_size, int):
+                size = limit_size
+            elif isinstance(limit_size, float):
+                size = int(limit_size * len(self.data))
+
+            random_indexes = np.random.randint(low=0, high=len(self.data), size=size)
+            self.data = self.data[random_indexes]
 
         # Store feature / target columns
         self.features = self.uci_dataset_configs[self.dataset_name]['features']
