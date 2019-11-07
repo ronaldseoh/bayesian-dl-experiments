@@ -22,32 +22,32 @@ class FCNet(nn.Module):
     
         # Setup layers
         # Input layer
-        self.input = nn.Linear(input_dim, hidden_dim)
-
-        # Initialize weights
-        nn.init.kaiming_uniform_(self.input.weight)
-        nn.init.zeros_(self.input.bias)
+        self.input = nn.Sequential(
+            nn.Linear(input_dim, hidden_dim),
+            create_dropout_layer(
+                self.dropout_rate, self.dropout_type, self.dropout_variational_dim),
+        )
 
         # Hidden Layer(s)
         self.hidden_layers = nn.ModuleList()
 
         if n_hidden > 0:
             for i in range(n_hidden):
-                self.hidden_layers.append(nn.Linear(hidden_dim, hidden_dim))
-                nn.init.kaiming_uniform_(self.hidden_layers[i].weight)
-                nn.init.zeros_(self.hidden_layers[i].bias)
+                self.hidden_layers.append(
+                    nn.Sequential(
+                        nn.Linear(hidden_dim, hidden_dim),
+                        create_dropout_layer(
+                            self.dropout_rate, self.dropout_type, self.dropout_variational_dim),
+                    )
+                )
 
         # Output
         self.output = nn.Linear(hidden_dim, output_dim)
-        nn.init.kaiming_uniform_(self.output.weight)
-        nn.init.zeros_(self.output.bias)        
 
     def forward(self, X):
-        dropout_input = create_dropout_layer(self.dropout_rate, self.dropout_type, self.dropout_variational_dim)
-        activation = F.relu(dropout_input(self.input(X)))
+        activation = F.relu(self.input(X))
 
         for hidden in self.hidden_layers:
-            dropout_hidden = create_dropout_layer(self.dropout_rate, self.dropout_type, self.dropout_variational_dim)
-            activation = F.relu(dropout_hidden(hidden(activation)))
+            activation = F.relu(hidden(activation))
 
         return self.output(activation)
