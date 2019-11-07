@@ -3,15 +3,17 @@ from torch.utils.data import Dataset
 
 class ToyDatasets(Dataset):
 
-    def __init__(self, random_seed=691, n_samples=50,
-                 x_low=-5, x_high=5, y_mean=0, y_std=9, transform=None):
+    def __init__(self, random_seed=691, n_samples=20,
+                 x_low=-4, x_high=4, y_mean=0, y_std=9, transform=None):
 
         self.transform = transform
 
         self._generator = torch.Generator()
         self._generator.manual_seed(random_seed)
 
-        # Based on
+        # Toy dataset generation based on
+        # Hernandez-Lobato & Adams, 2015 (https://arxiv.org/abs/1502.05336)
+        # Also refer to
         # https://github.com/pawni/BayesByHypernet/blob/master/toy_data.ipynb
         # https://pytorch.org/docs/master/tensors.html#torch.Tensor.uniform_
         # https://pytorch.org/docs/master/tensors.html#torch.Tensor.normal_
