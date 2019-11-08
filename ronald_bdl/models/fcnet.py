@@ -29,9 +29,8 @@ class FCNet(nn.Module):
         )
 
         # Hidden Layer(s)
-        self.hidden_layers = nn.ModuleList()
-
         if n_hidden > 0:
+            self.hidden_layers = nn.ModuleList()
             for i in range(n_hidden):
                 self.hidden_layers.append(
                     nn.Sequential(
@@ -46,8 +45,9 @@ class FCNet(nn.Module):
 
     def forward(self, X):
         activation = F.relu(self.input(X))
-
-        for hidden in self.hidden_layers:
-            activation = F.relu(hidden(activation))
+ 
+        if hasattr(self, 'hidden_layers'):
+            for hidden in self.hidden_layers:
+                activation = F.relu(hidden(activation))
 
         return self.output(activation)
