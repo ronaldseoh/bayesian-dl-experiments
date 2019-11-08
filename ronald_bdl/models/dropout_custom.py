@@ -33,7 +33,7 @@ class VariationalDropout(nn.Module):
         """
         if self.train():
             # N(0,1)
-            epsilon = torch.Variable(torch.randn(x.size()))
+            epsilon = torch.Tensor(torch.randn(x.size()))
 
             # Clip alpha
             self.log_alpha.data = torch.clamp(self.log_alpha.data, max=self.max_alpha)
