@@ -19,6 +19,10 @@ class FCNet(nn.Module):
                 self.dropout_variational_dim = kwargs['dropout_variational_dim']
             else:
                 self.dropout_variational_dim = None
+        else:
+            self.dropout_rate = 0
+            self.dropout_type = 'identity'
+            self.dropout_variational_dim = None
     
         # Setup layers
         # Input layer
