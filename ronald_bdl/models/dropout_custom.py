@@ -46,7 +46,7 @@ class VariationalDropout(nn.Module):
         else:
             return x
 
-def create_dropout_layer(dropout_rate, dropout_type, dropout_variational_dim=None):
+def create_dropout_layer(dropout_rate, dropout_type='identity', dropout_variational_dim=None):
 
     if dropout_type == 'bernoulli':
         dropout_layer = nn.Dropout(dropout_rate)
