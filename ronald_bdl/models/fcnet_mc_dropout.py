@@ -15,7 +15,10 @@ class FCNetMCDropout(FCNet):
         # No gradient computation needed for predictions, mean, and var
         # Refer to https://pytorch.org/docs/stable/autograd.html#locally-disable-grad
         with torch.no_grad():
+            # Temporaily disable eval mode
+            self.train()
             predictions = torch.stack([self.forward(X_test) for _ in range(n_predictions)])
+            self.eval()
 
             mean = torch.mean(predictions, 0)
             var = torch.var(predictions, 0)
