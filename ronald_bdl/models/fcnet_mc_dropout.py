@@ -12,7 +12,7 @@ class FCNetMCDropout(FCNet):
             input_dim=input_dim, output_dim=output_dim, hidden_dim=hidden_dim, n_hidden=n_hidden, 
             dropout_rate=dropout_rate, dropout_type=dropout_type, dropout_variational_dim=dropout_variational_dim)
 
-    def mc_predict(self, X_test, n_predictions, **kwargs):
+    def predict_dist(self, X_test, n_predictions, **kwargs):
         # No gradient computation needed for predictions, mean, and var
         # Refer to https://pytorch.org/docs/stable/autograd.html#locally-disable-grad
         with torch.no_grad():
