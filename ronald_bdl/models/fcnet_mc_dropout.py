@@ -6,10 +6,11 @@ from .fcnet import FCNet
 class FCNetMCDropout(FCNet):
 
     def __init__(
-        self, input_dim, output_dim, hidden_dim, n_hidden, dropout_rate, dropout_type):
+        self, input_dim, output_dim, hidden_dim, n_hidden, 
+        dropout_rate, dropout_type, dropout_variational_dim=None):
         super(FCNetMCDropout, self).__init__(
             input_dim=input_dim, output_dim=output_dim, hidden_dim=hidden_dim, n_hidden=n_hidden, 
-            dropout_rate=dropout_rate, dropout_type=dropout_type)
+            dropout_rate=dropout_rate, dropout_type=dropout_type, dropout_variational_dim=dropout_variational_dim)
 
     def mc_predict(self, X_test, n_predictions, **kwargs):
         # No gradient computation needed for predictions, mean, and var
