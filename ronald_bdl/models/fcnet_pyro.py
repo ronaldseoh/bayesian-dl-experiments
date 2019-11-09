@@ -2,13 +2,12 @@ import torch
 import torch.nn as nn
 import pyro
 from pyro.distributions import Normal, Uniform
-from pyro.infer import TracePredictive
 
 from .fcnet import FCNet
 
-class FCNetVariationalInference(FCNet):
+class FCNetPyro(FCNet):
     def __init__(self, input_dim, output_dim, hidden_dim, n_hidden):
-        super(FCNetVariationalInference, self).__init__(input_dim, output_dim, hidden_dim, 0)
+        super(FCNetPyro, self).__init__(input_dim, output_dim, hidden_dim, 0)
 
         self.input_dim = input_dim
         self.output_dim = output_dim
