@@ -2,6 +2,7 @@ import torch
 import numpy as np
 
 from .fcnet import FCNet
+from .dropout_custom import VariationalDropout
 
 class FCNetMCDropout(FCNet):
 
@@ -11,6 +12,15 @@ class FCNetMCDropout(FCNet):
         super(FCNetMCDropout, self).__init__(
             input_dim=input_dim, output_dim=output_dim, hidden_dim=hidden_dim, n_hidden=n_hidden, 
             dropout_rate=dropout_rate, dropout_type=dropout_type, dropout_variational_dim=dropout_variational_dim)
+
+    def kl(self):
+        kl = 0
+
+        for name, module in self.named_modules():
+            if isinstance(module, VariationalDropout):
+                kl += module.kl().sum()
+
+        return kl
 
     def predict_dist(self, X_test, n_predictions, **kwargs):
         # No gradient computation needed for predictions, mean, and var

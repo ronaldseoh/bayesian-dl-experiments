@@ -14,22 +14,16 @@ class FCNet(nn.Module):
         if 'dropout_rate' in kwargs:
             self.dropout_rate = kwargs['dropout_rate']
             self.dropout_type = kwargs['dropout_type']
-
-            if self.dropout_type == 'variational':
-                self.dropout_variational_dim = kwargs['dropout_variational_dim']
-            else:
-                self.dropout_variational_dim = None
         else:
             self.dropout_rate = 0
             self.dropout_type = 'identity'
-            self.dropout_variational_dim = None
     
         # Setup layers
         # Input layer
         self.input = nn.Sequential(
             nn.Linear(input_dim, hidden_dim),
             create_dropout_layer(
-                self.dropout_rate, self.dropout_type, self.dropout_variational_dim),
+                self.dropout_rate, hidden_dim, self.dropout_type,),
         )
 
         # Hidden Layer(s)
@@ -40,7 +34,7 @@ class FCNet(nn.Module):
                     nn.Sequential(
                         nn.Linear(hidden_dim, hidden_dim),
                         create_dropout_layer(
-                            self.dropout_rate, self.dropout_type, self.dropout_variational_dim),
+                            self.dropout_rate, hidden_dim, self.dropout_type,),
                     )
                 )
 
