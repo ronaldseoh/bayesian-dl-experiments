@@ -18,8 +18,13 @@ class ToyDatasets(Dataset):
         # https://pytorch.org/docs/master/tensors.html#torch.Tensor.uniform_
         # https://pytorch.org/docs/master/tensors.html#torch.Tensor.normal_
         self.data_x = torch.empty(n_samples, 1).uniform_(x_low, x_high, generator=self._generator)
-        self.data_y = torch.pow(self.data_x, 3) + torch.empty(n_samples, 1).normal_(
+
+        # Construct self.data_y with function values and noise
+        self.data_y_function = torch.pow(self.data_x, 3)
+        self.data_y_noise = torch.empty(n_samples, 1).normal_(
             mean=y_mean, std=y_std, generator=self._generator)
+
+        self.data_y = self.data_y_function + self.data_y_noise
 
         self.n_features = self.data_x.shape[1]
         self.n_targets = self.data_y.shape[1]
