@@ -4,7 +4,7 @@ import torch.nn as nn
 # Ported from
 # https://github.com/j-min/Dropouts/blob/master/Gaussian_Variational_Dropout.ipynb
 class VariationalDropout(nn.Module):
-    def __init__(self, dim, dropout_rate=0):
+    def __init__(self, dim, dropout_rate=0.0):
         super(VariationalDropout, self).__init__()
 
         self.dim = dim
@@ -35,7 +35,7 @@ class VariationalDropout(nn.Module):
             self.log_alpha.data = torch.clamp(self.log_alpha.data, max=self.max_alpha)
 
             # N(1, alpha)
-            self.epsilon.data = torch.mul(self.epsilon, self.log_alpha.exp())
+            self.epsilon.data = torch.mul(self.epsilon, torch.exp(self.log_alpha))
 
             return torch.mul(x, self.epsilon)
         else:
