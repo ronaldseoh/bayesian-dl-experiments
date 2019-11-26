@@ -3,6 +3,7 @@ import torch.nn as nn
 
 from .dropout_custom import create_dropout_layer
 
+
 class FCNet(nn.Module):
 
     def __init__(self, input_dim, output_dim, hidden_dim, n_hidden, **kwargs):
@@ -17,7 +18,7 @@ class FCNet(nn.Module):
         else:
             self.dropout_rate = 0
             self.dropout_type = 'identity'
-    
+
         # Setup layers
         # Input layer
         self.input = nn.Sequential(
@@ -43,7 +44,7 @@ class FCNet(nn.Module):
 
     def forward(self, X):
         activation = F.relu(self.input(X))
- 
+
         if hasattr(self, 'hidden_layers'):
             for hidden in self.hidden_layers:
                 activation = F.relu(hidden(activation))
