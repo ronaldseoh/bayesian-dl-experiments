@@ -22,9 +22,9 @@ class FCNetPyro(PyroModule):
         super().__init__()
 
         self.n_hidden = n_hidden
-        
+
         if 'torch_device' in kwargs:
-          self.device = kwargs['torch_device']
+            self.device = kwargs['torch_device']
 
         # Setup layers
         # Input layer
@@ -33,14 +33,17 @@ class FCNetPyro(PyroModule):
         # Adapted from
         # https://forum.pyro.ai/t/converting-neural-network-to-pyro-and-prediction/1414/2
         self.input = PyroModule[nn.ModuleDict]({
-            'linear': PyroModule[nn.Linear](input_dim, hidden_dim).to(self.device),
-            'relu': PyroModule[nn.ReLU]().to(self.device),
-        }).to(self.device)
+            'linear': PyroModule[nn.Linear](input_dim, hidden_dim),
+            'relu': PyroModule[nn.ReLU](),
+        })
 
         self.input['linear'].weight = PyroSample(
             normal_like(self.input['linear'].weight))
         self.input['linear'].bias = PyroSample(normal_like(
             self.input['linear'].bias))
+
+        self.input['linear'].weight = self.input['linear'].weight.to(self.device)
+        self.input['linear'].bias = self.input['linear'].bias.to(self.device)
 
         # Hidden Layer(s)
         if n_hidden > 0:
@@ -48,14 +51,17 @@ class FCNetPyro(PyroModule):
 
             for i in range(n_hidden):
                 hidden_layer = nn.ModuleDict({
-                    'linear': PyroModule[nn.Linear](hidden_dim, hidden_dim).to(self.device),
-                    'relu': PyroModule[nn.ReLU]().to(self.device),
+                    'linear': PyroModule[nn.Linear](hidden_dim, hidden_dim),
+                    'relu': PyroModule[nn.ReLU](),
                 }).to(self.device)
 
                 hidden_layer['linear'].weight = PyroSample(
                     normal_like(hidden_layer['linear'].weight))
                 hidden_layer['linear'].bias = PyroSample(
                     normal_like(hidden_layer['linear'].bias))
+
+                hidden_layer['linear'].weight = hidden_layer['linear'].weight.to(self.device)
+                hidden_layer['linear'].bias = hidden_layer['linear'].bias.to(self.device)
 
                 self.hidden_layers.append(hidden_layer)
 
@@ -65,20 +71,31 @@ class FCNetPyro(PyroModule):
         self.output.weight = PyroSample(normal_like(self.output.weight))
         self.output.bias = PyroSample(normal_like(self.output.bias))
 
+        self.output.weight = self.output.weight.to(self.device)
+        self.output.bias = self.output.bias.to(self.device)
+
+        # Guide function for inference
         self.guide = AutoDiagonalNormal(self)
 
     def forward(self, X, y=None):
-        activation = self.input['relu'](self.input['linear'](X))
 
+        # Forward through the first layer
+        activation = self.input['linear'](X)
+        activation = self.input['relu'](activation)
+
+        # Forward through hidden layers
         if hasattr(self, 'hidden_layers'):
             for hidden in self.hidden_layers:
-                activation = hidden['relu'](hidden['linear'](activation))
+                activation = hidden['linear'](activation)
+                activation = hidden['relu'](activation)
 
         output = self.output(activation).squeeze(-1)
 
-        sigma = pyro.sample("sigma", Uniform(0., 10.))
+        sigma = pyro.sample("sigma", Normal(0., 9.))
 
-        with pyro.plate("data", X.shape[0]):
+        sigma = sigma.to(self.device)
+
+        with pyro.plate("data", X.shape[0], device=self.device):
             obs = pyro.sample("obs", Normal(output, sigma), obs=y)
 
         return output
