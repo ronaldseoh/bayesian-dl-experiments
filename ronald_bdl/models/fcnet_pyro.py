@@ -1,16 +1,19 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
+
 import pyro
 from pyro.distributions import Normal, Uniform
 from pyro.nn import PyroModule, PyroSample
 from pyro.infer import Predictive
 from pyro.infer.autoguide import AutoDiagonalNormal
+
 import numpy as np
 
 
 def normal_like(X):
-    return Normal(0, 0.5*1).expand(X.shape).to_event(X.dim())
+    # Looks like each scalar in X will be sampled with
+    # this Normal distribution.
+    return Normal(loc=0, scale=1).expand(X.shape)  # .to_event(X.dim())
 
 
 class FCNetPyro(PyroModule):
@@ -22,24 +25,34 @@ class FCNetPyro(PyroModule):
 
         # Setup layers
         # Input layer
-        self.input = PyroModule[nn.Linear](input_dim, hidden_dim)
 
         # Setting up distributions for self.input's weight and bias
         # Adapted from
         # https://forum.pyro.ai/t/converting-neural-network-to-pyro-and-prediction/1414/2
-        self.input.weight = PyroSample(normal_like(self.input.weight))
-        self.input.bias = PyroSample(normal_like(self.input.bias))
+        self.input = PyroModule[nn.ModuleDict]({
+            'linear': PyroModule[nn.Linear](input_dim, hidden_dim),
+            'relu': PyroModule[nn.ReLU](),
+        })
+
+        self.input['linear'].weight = PyroSample(
+            normal_like(self.input['linear'].weight))
+        self.input['linear'].bias = PyroSample(normal_like(
+            self.input['linear'].bias))
 
         # Hidden Layer(s)
         if n_hidden > 0:
-            self.hidden_layers = nn.ModuleList()
+            self.hidden_layers = PyroModule[nn.ModuleList]()
 
             for i in range(n_hidden):
-                hidden_layer = PyroModule[nn.Linear](hidden_dim, hidden_dim)
+                hidden_layer = nn.ModuleDict({
+                    'linear': PyroModule[nn.Linear](hidden_dim, hidden_dim),
+                    'relu': PyroModule[nn.ReLU](),
+                })
 
-                hidden_layer.weight = PyroSample(
-                    normal_like(hidden_layer.weight))
-                hidden_layer.bias = PyroSample(normal_like(hidden_layer.bias))
+                hidden_layer['linear'].weight = PyroSample(
+                    normal_like(hidden_layer['linear'].weight))
+                hidden_layer['linear'].bias = PyroSample(
+                    normal_like(hidden_layer['linear'].bias))
 
                 self.hidden_layers.append(hidden_layer)
 
@@ -53,15 +66,15 @@ class FCNetPyro(PyroModule):
 
     def forward(self, X, y=None):
 
-        sigma = pyro.sample("sigma", Uniform(0., 10.))
-
-        activation = F.relu(self.input(X))
+        activation = self.input['relu'](self.input['linear'](X))
 
         if hasattr(self, 'hidden_layers'):
             for hidden in self.hidden_layers:
-                activation = F.relu(hidden(activation))
+                activation = hidden['relu'](hidden['linear'](activation))
 
         output = self.output(activation).squeeze(-1)
+
+        sigma = pyro.sample("sigma", Uniform(0., 10.))
 
         with pyro.plate("data", X.shape[0]):
             obs = pyro.sample("obs", Normal(output, sigma), obs=y)
