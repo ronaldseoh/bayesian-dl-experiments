@@ -22,6 +22,9 @@ class FCNetPyro(PyroModule):
         super().__init__()
 
         self.n_hidden = n_hidden
+        
+        if 'torch_device' in kwargs:
+          self.device = kwargs['torch_device']
 
         # Setup layers
         # Input layer
@@ -30,9 +33,9 @@ class FCNetPyro(PyroModule):
         # Adapted from
         # https://forum.pyro.ai/t/converting-neural-network-to-pyro-and-prediction/1414/2
         self.input = PyroModule[nn.ModuleDict]({
-            'linear': PyroModule[nn.Linear](input_dim, hidden_dim),
-            'relu': PyroModule[nn.ReLU](),
-        })
+            'linear': PyroModule[nn.Linear](input_dim, hidden_dim).to(self.device),
+            'relu': PyroModule[nn.ReLU]().to(self.device),
+        }).to(self.device)
 
         self.input['linear'].weight = PyroSample(
             normal_like(self.input['linear'].weight))
@@ -45,9 +48,9 @@ class FCNetPyro(PyroModule):
 
             for i in range(n_hidden):
                 hidden_layer = nn.ModuleDict({
-                    'linear': PyroModule[nn.Linear](hidden_dim, hidden_dim),
-                    'relu': PyroModule[nn.ReLU](),
-                })
+                    'linear': PyroModule[nn.Linear](hidden_dim, hidden_dim).to(self.device),
+                    'relu': PyroModule[nn.ReLU]().to(self.device),
+                }).to(self.device)
 
                 hidden_layer['linear'].weight = PyroSample(
                     normal_like(hidden_layer['linear'].weight))
@@ -57,7 +60,7 @@ class FCNetPyro(PyroModule):
                 self.hidden_layers.append(hidden_layer)
 
         # Output
-        self.output = PyroModule[nn.Linear](hidden_dim, output_dim)
+        self.output = PyroModule[nn.Linear](hidden_dim, output_dim).to(self.device)
 
         self.output.weight = PyroSample(normal_like(self.output.weight))
         self.output.bias = PyroSample(normal_like(self.output.bias))
@@ -65,7 +68,6 @@ class FCNetPyro(PyroModule):
         self.guide = AutoDiagonalNormal(self)
 
     def forward(self, X, y=None):
-
         activation = self.input['relu'](self.input['linear'](X))
 
         if hasattr(self, 'hidden_layers'):
