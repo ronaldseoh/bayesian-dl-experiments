@@ -23,17 +23,14 @@ class FCNetMCDropout(FCNet):
         return kl
 
     def predict_dist(self, X_test, n_predictions, **kwargs):
-        # No gradient computation needed for predictions, mean, and var
-        # Refer to https://pytorch.org/docs/stable/autograd.html#locally-disable-grad
-        #with torch.no_grad():
-
         was_eval = not self.training
 
         # Temporaily disable eval mode
         if was_eval:
             self.train()
+
         predictions = torch.stack([self.forward(X_test) for _ in range(n_predictions)])
-        
+
         if was_eval:
             self.eval()
 
