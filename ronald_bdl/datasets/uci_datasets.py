@@ -6,6 +6,7 @@ import torch
 from torch.utils.data import Dataset
 from torchvision.datasets.utils import download_url
 
+
 class UCIDatasets(Dataset):
 
     uci_dataset_configs = {
@@ -58,10 +59,7 @@ class UCIDatasets(Dataset):
 
         # Randomly re-sample the dataset if limit_size is given
         if limit_size is not None:
-            if isinstance(limit_size, int):
-                size = limit_size
-            elif isinstance(limit_size, float):
-                size = int(limit_size * len(self.data))
+            size = int(limit_size * len(self.data))
 
             random_indexes = np.random.randint(low=0, high=len(self.data), size=size)
             self.data = self.data[random_indexes]
