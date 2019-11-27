@@ -91,7 +91,7 @@ class FCNetPyro(PyroModule):
 
         output = self.output(activation).squeeze(-1)
 
-        sigma = pyro.sample("sigma", Normal(0., 9.))
+        sigma = pyro.sample("sigma", Normal(0., 3.))
 
         sigma = sigma.to(self.device)
 
