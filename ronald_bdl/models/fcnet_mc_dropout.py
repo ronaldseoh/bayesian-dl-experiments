@@ -4,14 +4,16 @@ import numpy as np
 from .fcnet import FCNet
 from .dropout_custom import VariationalDropout
 
+
 class FCNetMCDropout(FCNet):
 
-    def __init__(
-        self, input_dim, output_dim, hidden_dim, n_hidden, 
-        dropout_rate, dropout_type, dropout_variational_dim=None):
+    def __init__(self, input_dim, output_dim, hidden_dim, n_hidden,
+                 dropout_rate, dropout_type, dropout_variational_dim=None):
+
         super(FCNetMCDropout, self).__init__(
-            input_dim=input_dim, output_dim=output_dim, hidden_dim=hidden_dim, n_hidden=n_hidden, 
-            dropout_rate=dropout_rate, dropout_type=dropout_type, dropout_variational_dim=dropout_variational_dim)
+            input_dim=input_dim, output_dim=output_dim, hidden_dim=hidden_dim,
+            n_hidden=n_hidden,
+            dropout_rate=dropout_rate, dropout_type=dropout_type,)
 
     def kl(self):
         kl = 0
@@ -29,7 +31,8 @@ class FCNetMCDropout(FCNet):
         if was_eval:
             self.train()
 
-        predictions = torch.stack([self.forward(X_test) for _ in range(n_predictions)])
+        predictions = torch.stack(
+            [self.forward(X_test) for _ in range(n_predictions)])
 
         if was_eval:
             self.eval()
