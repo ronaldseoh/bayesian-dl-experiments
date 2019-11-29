@@ -39,6 +39,9 @@ class SimpleCIFAR10(nn.Module):
             self.dropout_rate, -1, self.dropout_type)
 
         self.fc3 = nn.Linear(84, 10)
+        
+        self.fc3_dropout = create_dropout_layer(
+            self.dropout_rate, -1, self.dropout_type)
 
     def forward(self, x):
         x = self.pool(F.relu(self.conv1_dropout(self.conv1(x))))
@@ -46,6 +49,6 @@ class SimpleCIFAR10(nn.Module):
         x = x.view(-1, 16 * 5 * 5)
         x = F.relu(self.fc1_dropout(self.fc1(x)))
         x = F.relu(self.fc2_dropout(self.fc2(x)))
-        x = self.fc3(x)
+        x = self.fc3_dropout(self.fc3(x))
 
         return x
