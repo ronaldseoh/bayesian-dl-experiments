@@ -2,6 +2,7 @@ from torchvision.models.squeezenet import SqueezeNet as SqueezeNetTorchVision
 from torchvision.models.squeezenet import model_urls
 from torchvision.models.utils import load_state_dict_from_url
 
+
 class SqueezeNet(SqueezeNetTorchVision):
     def __init__(self, version='1_1'):
         super(SqueezeNet, self).__init__(version)
