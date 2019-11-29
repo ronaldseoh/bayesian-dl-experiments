@@ -8,21 +8,12 @@ from .dropout_custom import VariationalDropout
 class FCNetMCDropout(FCNet):
 
     def __init__(self, input_dim, output_dim, hidden_dim, n_hidden,
-                 dropout_rate, dropout_type, dropout_variational_dim=None):
+                 dropout_rate, dropout_type):
 
         super(FCNetMCDropout, self).__init__(
             input_dim=input_dim, output_dim=output_dim, hidden_dim=hidden_dim,
             n_hidden=n_hidden,
-            dropout_rate=dropout_rate, dropout_type=dropout_type,)
-
-    def kl(self):
-        kl = 0
-
-        for name, module in self.named_modules():
-            if isinstance(module, VariationalDropout):
-                kl += module.kl().sum()
-
-        return kl
+            dropout_rate=dropout_rate, dropout_type=dropout_type)
 
     def predict_dist(self, X_test, n_predictions, **kwargs):
         was_eval = not self.training
@@ -37,29 +28,31 @@ class FCNetMCDropout(FCNet):
         if was_eval:
             self.eval()
 
-        mean = torch.mean(predictions, 0)
-        var = torch.var(predictions, 0)
+        # No gradient tracking necessary
+        with torch.no_grad():
+            mean = torch.mean(predictions, 0)
+            var = torch.var(predictions, 0)
 
-        # If y_test is given, calculate RMSE and test log-likelihood
-        metrics = {}
+            # If y_test is given, calculate RMSE and test log-likelihood
+            metrics = {}
 
-        if 'y_test' in kwargs:
-            y_test = kwargs['y_test']
-            reg_strength = torch.tensor(kwargs['reg_strength'], dtype=torch.float)
+            if 'y_test' in kwargs:
+                y_test = kwargs['y_test']
+                reg_strength = torch.tensor(kwargs['reg_strength'], dtype=torch.float)
 
-            # RMSE
-            metrics['rmse_mc'] = torch.sqrt(torch.mean(torch.pow(y_test - mean, 2)))
+                # RMSE
+                metrics['rmse_mc'] = torch.sqrt(torch.mean(torch.pow(y_test - mean, 2)))
 
-            # RMSE (Non-MC)
-            prediction_non_mc = self.forward(X_test)
-            metrics['rmse_non_mc'] = torch.sqrt(torch.mean(torch.pow(y_test - prediction_non_mc, 2)))
+                # RMSE (Non-MC)
+                prediction_non_mc = self.forward(X_test)
+                metrics['rmse_non_mc'] = torch.sqrt(torch.mean(torch.pow(y_test - prediction_non_mc, 2)))
 
-            # test log-likelihood
-            metrics['test_ll_mc'] = torch.mean(
-                torch.logsumexp(- torch.tensor(0.5) * reg_strength * torch.pow(y_test[None] - predictions, 2), 0)
-                - torch.log(torch.tensor(n_predictions, dtype=torch.float))
-                - torch.tensor(0.5) * torch.log(torch.tensor(2 * np.pi, dtype=torch.float)) 
-                + torch.tensor(0.5) * torch.log(reg_strength)
-            )
+                # test log-likelihood
+                metrics['test_ll_mc'] = torch.mean(
+                    torch.logsumexp(- torch.tensor(0.5) * reg_strength * torch.pow(y_test[None] - predictions, 2), 0)
+                    - torch.log(torch.tensor(n_predictions, dtype=torch.float))
+                    - torch.tensor(0.5) * torch.log(torch.tensor(2 * np.pi, dtype=torch.float)) 
+                    + torch.tensor(0.5) * torch.log(reg_strength)
+                )
 
         return predictions, mean, var, metrics
