@@ -42,7 +42,11 @@ class FCNet(nn.Module):
                 )
 
         # Output
-        self.output = nn.Linear(hidden_dim, output_dim)
+        self.output = nn.ModuleDict({
+            'linear': nn.Linear(hidden_dim, output_dim),
+            'dropout': create_dropout_layer(
+                self.dropout_rate, output_dim, self.dropout_type,),
+        })
 
     def forward(self, X):
         # Forward through the input layer
@@ -57,4 +61,7 @@ class FCNet(nn.Module):
                 activation = hidden['dropout'](activation)
                 activation = hidden['relu'](activation)
 
-        return self.output(activation)
+        activation = self.output['linear'](activation)
+        activation = self.output['dropout'](activation)
+
+        return activation
