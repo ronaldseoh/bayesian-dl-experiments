@@ -2,7 +2,6 @@ import torch
 import numpy as np
 
 from .fcnet import FCNet
-from .dropout_custom import VariationalDropout
 
 
 class FCNetMCDropout(FCNet):
