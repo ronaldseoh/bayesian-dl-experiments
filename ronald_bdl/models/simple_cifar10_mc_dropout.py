@@ -14,50 +14,46 @@ class SimpleCIFAR10MCDropout(SimpleCIFAR10):
 
         was_eval = not self.training
 
-        raw_scores = []
-        raw_scores_non_mc = []
-        
+        predictions = []
+        mean_predictions = []
+        metrics = {}
+
+        metrics['accuracy_mc'] = 0
+        metrics['accuracy_non_mc'] = 0
+
         for data in test_loader:
             # Temporaily disable eval mode
             if was_eval:
                 self.train()
 
             inputs, targets = data
-            
+
             inputs = inputs.to(torch_device)
             targets = targets.to(torch_device)
 
             raw_scores_batch = torch.stack(
                 [self.forward(inputs) for _ in range(n_prediction)])
 
-            raw_scores.append(raw_scores_batch)
-            
+            predictions_batch = torch.max(raw_scores_batch, 2).values
+
+            mean_raw_scores_batch = torch.mean(raw_scores_batch, 0)
+            mean_predictions_batch = torch.argmax(mean_raw_scores_batch, 1)
+            mean_predictions.append(mean_predictions_batch)
+
             if was_eval:
                 self.eval()
-                
-            raw_scores_batch_non_mc = self.forward(inputs)
-            
-            raw_scores_non_mc.append(raw_scores_batch_non_mc)
-            
-        raw_scores = torch.stack(raw_scores)
-        raw_scores_non_mc = torch.stack(raw_scores_non_mc)
 
-        print(raw_scores.shape)
-        print(raw_scores_non_mc.shape)
-        
-        mean = torch.mean(raw_scores, 1)
-        var = torch.var(raw_scores, 1)
-        
-        print(mean.shape)
+            non_mc_raw_scores_batch = self.forward(inputs)
+            non_mc_predictions_batch = torch.argmax(non_mc_raw_scores_batch, 1)
 
-        # If y_test is given, calculate RMSE and test log-likelihood
-        metrics = {}
+            # Accuracy
+            metrics['accuracy_mc'] += torch.mean((mean_predictions_batch == targets).float())
+            metrics['accuracy_mc'] /= 2
 
-        # Accuracy
-        metrics['accuracy_mc'] = torch.mean(torch.max(mean, 1) == y_test)
+            # Accuracy (Non-MC)
+            metrics['accuracy_non_mc'] += torch.mean((non_mc_predictions_batch == targets).float())
+            metrics['accuracy_non_mc'] /= 2
 
-        # Accuracy (Non-MC)
-        metrics['accuracy_non_mc'] = torch.mean(
-            torch.max(prediction_non_mc, 1) == y_test)
+        mean_predictions = torch.cat(mean_predictions)
 
-        return predictions, mean, var, metrics
+        return predictions, mean_predictions, metrics
