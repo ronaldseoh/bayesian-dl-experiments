@@ -39,7 +39,7 @@ class SimpleCIFAR10(nn.Module):
             self.dropout_rate, -1, self.dropout_type)
 
         self.fc3 = nn.Linear(84, 10)
-        
+
         self.fc3_dropout = create_dropout_layer(
             self.dropout_rate, -1, self.dropout_type)
 
