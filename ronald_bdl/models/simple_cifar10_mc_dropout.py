@@ -1,4 +1,5 @@
 import torch
+import torch.nn.functional as F
 import numpy as np
 
 from .simple_cifar10 import SimpleCIFAR10
@@ -20,6 +21,7 @@ class SimpleCIFAR10MCDropout(SimpleCIFAR10):
 
         metrics['accuracy_mc'] = 0
         metrics['accuracy_non_mc'] = 0
+        metrics['test_ll_mc'] = 0
 
         with torch.no_grad():
             for data in test_loader:
@@ -54,6 +56,10 @@ class SimpleCIFAR10MCDropout(SimpleCIFAR10):
                 # Accuracy (Non-MC)
                 metrics['accuracy_non_mc'] += torch.mean((non_mc_predictions_batch == targets).float())
                 metrics['accuracy_non_mc'] /= 2
+
+                # test log-likelihood
+                metrics['test_ll_mc'] -= (F.cross_entropy(mean_raw_scores_batch, targets))
+                metrics['test_ll_mc'] /= 2
 
             mean_predictions = torch.cat(mean_predictions)
 
