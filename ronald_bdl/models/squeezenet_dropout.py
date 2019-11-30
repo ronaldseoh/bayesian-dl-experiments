@@ -9,7 +9,7 @@ class FireDropout(nn.Module):
 
     def __init__(self, inplanes, squeeze_planes,
                  expand1x1_planes, expand3x3_planes, **kwargs):
-        super(Fire, self).__init__()
+        super(FireDropout, self).__init__()
 
         self.inplanes = inplanes
 
@@ -21,11 +21,11 @@ class FireDropout(nn.Module):
             self.dropout_rate = 0
             self.dropout_type = 'identity'
 
-        self.squeeze = nn.Conv2d(inplanes, squeeze_planes, kernel_size=1)        
+        self.squeeze = nn.Conv2d(inplanes, squeeze_planes, kernel_size=1)
 
         # Additional dropout layer
         self.squeeze_dropout = create_dropout_layer(
-            self.dropout_rate, -1, self.dropout_type,),
+            self.dropout_rate, -1, self.dropout_type)
 
         self.squeeze_activation = nn.ReLU(inplace=True)
 
@@ -34,7 +34,7 @@ class FireDropout(nn.Module):
 
         # Additional dropout layer
         self.expand1x1_dropout = create_dropout_layer(
-            self.dropout_rate, -1, self.dropout_type,),
+            self.dropout_rate, -1, self.dropout_type)
 
         self.expand1x1_activation = nn.ReLU(inplace=True)
 
@@ -43,7 +43,7 @@ class FireDropout(nn.Module):
 
         # Additional dropout layer
         self.expand3x3_dropout = create_dropout_layer(
-            self.dropout_rate, -1, self.dropout_type,),
+            self.dropout_rate, -1, self.dropout_type)
 
         self.expand3x3_activation = nn.ReLU(inplace=True)
 
@@ -69,7 +69,7 @@ class SqueezeNetDropout(nn.Module):
         else:
             self.dropout_rate = 0
             self.dropout_type = 'identity'
-   
+
         self.features = nn.Sequential(
             nn.Conv2d(3, 64, kernel_size=3, stride=2),
             # Additional dropout layer added here
@@ -77,16 +77,16 @@ class SqueezeNetDropout(nn.Module):
                 self.dropout_rate, -1, self.dropout_type,),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(kernel_size=3, stride=2, ceil_mode=True),
-            FireDropout(64, 16, 64, 64, dropout_rate=dropout_rate, dropout_type=self.dropout_type),
-            FireDropout(128, 16, 64, 64, dropout_rate=dropout_rate, dropout_type=self.dropout_type),
+            FireDropout(64, 16, 64, 64, dropout_rate=self.dropout_rate, dropout_type=self.dropout_type),
+            FireDropout(128, 16, 64, 64, dropout_rate=self.dropout_rate, dropout_type=self.dropout_type),
             nn.MaxPool2d(kernel_size=3, stride=2, ceil_mode=True),
-            FireDropout(128, 32, 128, 128, dropout_rate=dropout_rate, dropout_type=self.dropout_type),
-            FireDropout(256, 32, 128, 128, dropout_rate=dropout_rate, dropout_type=self.dropout_type),
+            FireDropout(128, 32, 128, 128, dropout_rate=self.dropout_rate, dropout_type=self.dropout_type),
+            FireDropout(256, 32, 128, 128, dropout_rate=self.dropout_rate, dropout_type=self.dropout_type),
             nn.MaxPool2d(kernel_size=3, stride=2, ceil_mode=True),
-            FireDropout(256, 48, 192, 192, dropout_rate=dropout_rate, dropout_type=self.dropout_type),
-            FireDropout(384, 48, 192, 192, dropout_rate=dropout_rate, dropout_type=self.dropout_type),
-            FireDropout(384, 64, 256, 256, dropout_rate=dropout_rate, dropout_type=self.dropout_type),
-            FireDropout(512, 64, 256, 256, dropout_rate=dropout_rate, dropout_type=self.dropout_type),
+            FireDropout(256, 48, 192, 192, dropout_rate=self.dropout_rate, dropout_type=self.dropout_type),
+            FireDropout(384, 48, 192, 192, dropout_rate=self.dropout_rate, dropout_type=self.dropout_type),
+            FireDropout(384, 64, 256, 256, dropout_rate=self.dropout_rate, dropout_type=self.dropout_type),
+            FireDropout(512, 64, 256, 256, dropout_rate=self.dropout_rate, dropout_type=self.dropout_type),
         )
 
         # Final convolution is initialized differently from the rest
