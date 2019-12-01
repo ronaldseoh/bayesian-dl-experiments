@@ -46,7 +46,7 @@ class SimpleCIFAR10(nn.Module):
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
-                init.kaiming_uniform_(m.weight)
+                init.kaiming_normal_(m.weight)
 
                 if m.bias is not None:
                     init.constant_(m.bias, 0)
