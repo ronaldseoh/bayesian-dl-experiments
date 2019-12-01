@@ -1,5 +1,6 @@
 import torch.nn as nn
 import torch.nn.functional as F
+import torch.nn.init as init
 
 from .dropout_custom import create_dropout_layer
 
@@ -42,6 +43,13 @@ class SimpleCIFAR10(nn.Module):
 
         self.fc3_dropout = create_dropout_layer(
             self.dropout_rate, -1, self.dropout_type)
+
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                init.kaiming_uniform_(m.weight)
+
+                if m.bias is not None:
+                    init.constant_(m.bias, 0)
 
     def forward(self, x):
         x = self.pool(F.relu(self.conv1_dropout(self.conv1(x))))
