@@ -93,8 +93,8 @@ class SqueezeNetDropout(nn.Module):
         final_conv = nn.Conv2d(512, self.num_classes, kernel_size=1)
 
         self.classifier = nn.Sequential(
-            # SqueezeNet (and many other known CNNs) originally 
-            # do have dropout layers here, right before the final output
+            # SqueezeNet (and many other known CNNs) originally
+            # do have dropout layers here, right before the final output.
             # Replace it with our dropout layer creator
             create_dropout_layer(
                 self.dropout_rate, -1, self.dropout_type,),
