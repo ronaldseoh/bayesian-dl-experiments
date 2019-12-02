@@ -2,7 +2,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.nn.init as init
 
-from .dropout_custom import create_dropout_layer
+from .utils import create_dropout_layer
 
 
 class SimpleCIFAR10(nn.Module):
@@ -20,33 +20,33 @@ class SimpleCIFAR10(nn.Module):
         self.conv1 = nn.Conv2d(3, 6, 5)
 
         self.conv1_dropout = create_dropout_layer(
-            self.dropout_rate, -1, self.dropout_type)
+            self.dropout_rate, self.dropout_type)
 
         self.pool = nn.MaxPool2d(2, 2)
 
         self.conv2 = nn.Conv2d(6, 16, 5)
 
         self.conv2_dropout = create_dropout_layer(
-            self.dropout_rate, -1, self.dropout_type)
+            self.dropout_rate, self.dropout_type)
 
         self.fc1 = nn.Linear(16 * 5 * 5, 120)
 
         self.fc1_dropout = create_dropout_layer(
-            self.dropout_rate, -1, self.dropout_type)
+            self.dropout_rate, self.dropout_type)
 
         self.fc2 = nn.Linear(120, 84)
 
         self.fc2_dropout = create_dropout_layer(
-            self.dropout_rate, -1, self.dropout_type)
+            self.dropout_rate, self.dropout_type)
 
         self.fc3 = nn.Linear(84, 10)
 
         self.fc3_dropout = create_dropout_layer(
-            self.dropout_rate, -1, self.dropout_type)
+            self.dropout_rate, self.dropout_type)
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
-                init.kaiming_normal_(m.weight)
+                init.kaiming_uniform_(m.weight)
 
                 if m.bias is not None:
                     init.constant_(m.bias, 0)
@@ -60,3 +60,62 @@ class SimpleCIFAR10(nn.Module):
         x = self.fc3_dropout(self.fc3(x))
 
         return x
+
+    def predict_dist(self, test_data, n_prediction):
+
+        was_eval = not self.training
+
+        predictions = []
+        mean_predictions = []
+        metrics = {}
+
+        metrics['accuracy_mc'] = 0
+        metrics['accuracy_non_mc'] = 0
+        metrics['test_ll_mc'] = 0
+
+        with torch.no_grad():
+            if isinstance(test_data, torch.utils.data.DataLoader):
+                for data in test_data:
+                    # Temporaily disable eval mode
+                    if was_eval:
+                        self.train()
+
+                    inputs, targets = data
+
+                    inputs = inputs.to(torch_device)
+                    targets = targets.to(torch_device)
+
+                    raw_scores_batch = torch.stack(
+                        [self.forward(inputs) for _ in range(n_prediction)])
+
+                    predictions_batch = torch.max(raw_scores_batch, 2).values
+
+                    mean_raw_scores_batch = torch.mean(raw_scores_batch, 0)
+                    mean_predictions_batch = torch.argmax(mean_raw_scores_batch, 1)
+                    mean_predictions.append(mean_predictions_batch)
+
+                    if was_eval:
+                        self.eval()
+
+                    non_mc_raw_scores_batch = self.forward(inputs)
+                    non_mc_predictions_batch = torch.argmax(
+                        non_mc_raw_scores_batch, 1)
+
+                    # Accuracy
+                    metrics['accuracy_mc'] += torch.mean(
+                        (mean_predictions_batch == targets).float())
+                    metrics['accuracy_mc'] /= 2
+
+                    # Accuracy (Non-MC)
+                    metrics['accuracy_non_mc'] += torch.mean(
+                        (non_mc_predictions_batch == targets).float())
+                    metrics['accuracy_non_mc'] /= 2
+
+                    # test log-likelihood
+                    metrics['test_ll_mc'] -= (
+                        F.cross_entropy(mean_raw_scores_batch, targets))
+                    metrics['test_ll_mc'] /= 2
+
+            mean_predictions = torch.cat(mean_predictions)
+
+        return predictions, mean_predictions, metrics

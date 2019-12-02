@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.init as init
 
-from .dropout_custom import create_dropout_layer
+from .utils import create_dropout_layer
 
 
 class FireDropout(nn.Module):
@@ -25,7 +25,7 @@ class FireDropout(nn.Module):
 
         # Additional dropout layer
         self.squeeze_dropout = create_dropout_layer(
-            self.dropout_rate, -1, self.dropout_type)
+            self.dropout_rate, self.dropout_type)
 
         self.squeeze_activation = nn.ReLU(inplace=True)
 
@@ -34,7 +34,7 @@ class FireDropout(nn.Module):
 
         # Additional dropout layer
         self.expand1x1_dropout = create_dropout_layer(
-            self.dropout_rate, -1, self.dropout_type)
+            self.dropout_rate, self.dropout_type)
 
         self.expand1x1_activation = nn.ReLU(inplace=True)
 
@@ -43,7 +43,7 @@ class FireDropout(nn.Module):
 
         # Additional dropout layer
         self.expand3x3_dropout = create_dropout_layer(
-            self.dropout_rate, -1, self.dropout_type)
+            self.dropout_rate, self.dropout_type)
 
         self.expand3x3_activation = nn.ReLU(inplace=True)
 
@@ -97,7 +97,7 @@ class SqueezeNetDropout(nn.Module):
             # do have dropout layers here, right before the final output.
             # Replace it with our dropout layer creator
             create_dropout_layer(
-                self.dropout_rate, -1, self.dropout_type,),
+                self.dropout_rate, self.dropout_type),
             final_conv,
             nn.ReLU(inplace=True),
             nn.AdaptiveAvgPool2d((1, 1))
