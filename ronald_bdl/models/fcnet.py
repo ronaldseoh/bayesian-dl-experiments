@@ -1,4 +1,5 @@
 import torch.nn as nn
+import torch.nn.init as init
 
 from .dropout_custom import create_dropout_layer
 
@@ -47,6 +48,13 @@ class FCNet(nn.Module):
             'dropout': create_dropout_layer(
                 self.dropout_rate, output_dim, self.dropout_type,),
         })
+
+        for m in self.modules():
+            if isinstance(m, nn.Linear):
+                init.kaiming_uniform_(m.weight)
+
+                if m.bias is not None:
+                    init.constant_(m.bias, 0)
 
     def forward(self, X):
         # Forward through the input layer
