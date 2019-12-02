@@ -38,11 +38,13 @@ class UCIDatasets(Dataset):
     }
 
     def __init__(
-        self, dataset_name, root_dir, limit_size=None, transform=None, download=True):
+        self, dataset_name, root_dir, limit_size=None,
+            transform=None, target_transform=None, download=True):
 
         self.dataset_name = dataset_name
         self.root_dir = root_dir
         self.transform = transform
+        self.target_transform = target_transform
 
         # Get the url and file name for the requested dataset_name
         self.url = self.uci_dataset_configs[self.dataset_name]['url']
@@ -70,6 +72,14 @@ class UCIDatasets(Dataset):
         self.targets = self.uci_dataset_configs[self.dataset_name]['targets']
         self.n_targets = len(self.targets)
 
+        # Transform
+        if self.transform is not None:
+            self.X_mean = torch.mean(self.data[:, self.features], 0)
+            self.X_std = torch.std(self.data[:, self.features], 0)
+
+            self.y_mean = torch.mean(self.data[:, self.targets])
+            self.y_std = torch.std(self.data[:, self.targets])
+
     def __len__(self):
         return len(self.data)
 
@@ -81,10 +91,26 @@ class UCIDatasets(Dataset):
             idx_list = [idx]
         else:
             idx_list = idx
-    
-        sample = (self.data[idx_list][:, self.features], self.data[idx_list][:, self.targets])
+
+        if self.transform is not None:
+            X = self.transform(
+                self.data[idx_list][:, self.features],
+                mean=self.X_mean, std=self.X_std)
+        else:
+            X = self.data[idx_list][:, self.features]
+
+        if self.target_transform is not None:
+            y = self.target_transform(
+                self.data[idx_list][:, self.targets],
+                mean=self.y_mean, std=self.y_std)
+        else:
+            y = self.data[idx_list][:, self.targets]
+
+        sample = (X, y)
 
         return sample
 
     def download(self):
-        download_url(self.url, self.root_dir, os.path.join(self.dataset_name, self.filename))
+        download_url(
+            self.url, self.root_dir,
+            os.path.join(self.dataset_name, self.filename))
