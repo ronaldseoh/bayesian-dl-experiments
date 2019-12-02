@@ -13,7 +13,7 @@ import numpy as np
 def normal_like(X):
     # Looks like each scalar in X will be sampled with
     # this Normal distribution.
-    return Normal(loc=0, scale=1).expand(X.shape)  # .to_event(X.dim())
+    return Normal(loc=0, scale=1).expand(X.shape).to_event(X.dim())
 
 
 class FCNetPyro(PyroModule):
@@ -38,9 +38,9 @@ class FCNetPyro(PyroModule):
         })
 
         self.input['linear'].weight = PyroSample(
-            normal_like(self.input['linear'].weight))
-        self.input['linear'].bias = PyroSample(normal_like(
-            self.input['linear'].bias))
+            prior=normal_like(self.input['linear'].weight))
+        self.input['linear'].bias = PyroSample(
+            prior=normal_like(self.input['linear'].bias))
 
         self.input['linear'].weight = \
             self.input['linear'].weight.to(self.device)
@@ -57,9 +57,9 @@ class FCNetPyro(PyroModule):
                 }).to(self.device)
 
                 hidden_layer['linear'].weight = PyroSample(
-                    normal_like(hidden_layer['linear'].weight))
+                    prior=normal_like(hidden_layer['linear'].weight))
                 hidden_layer['linear'].bias = PyroSample(
-                    normal_like(hidden_layer['linear'].bias))
+                    prior=normal_like(hidden_layer['linear'].bias))
 
                 hidden_layer['linear'].weight = \
                     hidden_layer['linear'].weight.to(self.device)
@@ -72,14 +72,11 @@ class FCNetPyro(PyroModule):
         self.output = \
             PyroModule[nn.Linear](hidden_dim, output_dim).to(self.device)
 
-        self.output.weight = PyroSample(normal_like(self.output.weight))
-        self.output.bias = PyroSample(normal_like(self.output.bias))
+        self.output.weight = PyroSample(prior=normal_like(self.output.weight))
+        self.output.bias = PyroSample(prior=normal_like(self.output.bias))
 
         self.output.weight = self.output.weight.to(self.device)
         self.output.bias = self.output.bias.to(self.device)
-
-        # Guide function for inference
-        self.guide = AutoDiagonalNormal(self)
 
     def forward(self, X, y=None):
 
