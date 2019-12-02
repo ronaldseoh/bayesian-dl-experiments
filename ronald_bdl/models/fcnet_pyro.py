@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 import pyro
 from pyro.distributions import Normal, Uniform
@@ -104,7 +105,7 @@ class FCNetPyro(PyroModule):
     def guide(self, X, y):
         # First layer weight distribution priors
         input_weight_mu = torch.randn_like(self.input['linear'].weight).to(self.device)
-        input_weight_sigma = torch.randn_like(self.input['linear'].weight).to(self.device)
+        input_weight_sigma = F.softplus(torch.randn_like(self.input['linear'].weight)).to(self.device)
 
         input_weight_mu_param = pyro.param("input_weight_mu", input_weight_mu)
         input_weight_sigma_param = pyro.param("input_weight_sigma", input_weight_sigma)
@@ -115,7 +116,7 @@ class FCNetPyro(PyroModule):
 
         # First layer bias distribution priors
         input_bias_mu = torch.randn_like(self.input['linear'].bias).to(self.device)
-        input_bias_sigma = torch.randn_like(self.input['linear'].bias).to(self.device)
+        input_bias_sigma = F.softplus(torch.randn_like(self.input['linear'].bias)).to(self.device)
 
         input_bias_mu_param = pyro.param("input_bias_mu", input_bias_mu)
         input_bias_sigma_param = pyro.param("input_bias_sigma", input_bias_sigma)
@@ -126,7 +127,7 @@ class FCNetPyro(PyroModule):
 
         # Output layer weight distribution priors
         output_weight_mu = torch.randn_like(self.output.weight).to(self.device)
-        output_weight_sigma = torch.randn_like(self.output.weight).to(self.device)
+        output_weight_sigma = F.softplus(torch.randn_like(self.output.weight)).to(self.device)
 
         output_weight_mu_param = pyro.param("output_weight_mu", output_weight_mu)
         output_weight_sigma_param = pyro.param("output_weight_sigma", output_weight_sigma)
@@ -137,7 +138,7 @@ class FCNetPyro(PyroModule):
 
         # Output layer bias distribution priors
         output_bias_mu = torch.randn_like(self.output.bias).to(self.device)
-        output_bias_sigma = torch.randn_like(self.output.bias).to(self.device)
+        output_bias_sigma = F.softplus(torch.randn_like(self.output.bias)).to(self.device)
 
         output_bias_mu_param = pyro.param("output_bias_mu", output_bias_mu)
         output_bias_sigma_param = pyro.param("output_bias_sigma", output_bias_sigma)
