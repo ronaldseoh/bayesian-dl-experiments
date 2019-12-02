@@ -13,7 +13,7 @@ import numpy as np
 def normal_like(X):
     # Looks like each scalar in X will be sampled with
     # this Normal distribution.
-    return Normal(loc=0, scale=1).expand(X.shape).to_event(X.dim())
+    return Normal(loc=0, scale=1).expand(X.shape)
 
 
 class FCNetPyro(PyroModule):
@@ -92,7 +92,7 @@ class FCNetPyro(PyroModule):
 
         output = self.output(activation).squeeze(-1)
 
-        sigma = pyro.sample("sigma", Uniform(0., 10.))
+        sigma = pyro.sample("sigma", Uniform(0., 1.))
 
         sigma = sigma.to(self.device)
 
@@ -100,6 +100,51 @@ class FCNetPyro(PyroModule):
             obs = pyro.sample("obs", Normal(output, sigma), obs=y)
 
         return output
+
+    def guide(self, X, y):
+        # First layer weight distribution priors
+        input_weight_mu = torch.randn_like(self.input['linear'].weight).to(self.device)
+        input_weight_sigma = torch.randn_like(self.input['linear'].weight).to(self.device)
+
+        input_weight_mu_param = pyro.param("input_weight_mu", input_weight_mu)
+        input_weight_sigma_param = pyro.param("input_weight_sigma", input_weight_sigma)
+
+        input_weight = pyro.sample(
+            "input.linear.weight",
+            Normal(loc=input_weight_mu_param, scale=input_weight_sigma_param))
+
+        # First layer bias distribution priors
+        input_bias_mu = torch.randn_like(self.input['linear'].bias).to(self.device)
+        input_bias_sigma = torch.randn_like(self.input['linear'].bias).to(self.device)
+
+        input_bias_mu_param = pyro.param("input_bias_mu", input_bias_mu)
+        input_bias_sigma_param = pyro.param("input_bias_sigma", input_bias_sigma)
+
+        input_bias = pyro.sample(
+            "input.linear.bias",
+            Normal(loc=input_bias_mu_param, scale=input_bias_sigma_param))
+
+        # Output layer weight distribution priors
+        output_weight_mu = torch.randn_like(self.output.weight).to(self.device)
+        output_weight_sigma = torch.randn_like(self.output.weight).to(self.device)
+
+        output_weight_mu_param = pyro.param("output_weight_mu", output_weight_mu)
+        output_weight_sigma_param = pyro.param("output_weight_sigma", output_weight_sigma)
+
+        output_weight = pyro.sample(
+            "output.linear.weight",
+            Normal(loc=output_weight_mu_param, scale=output_weight_sigma_param))
+
+        # Output layer bias distribution priors
+        output_bias_mu = torch.randn_like(self.output.bias).to(self.device)
+        output_bias_sigma = torch.randn_like(self.output.bias).to(self.device)
+
+        output_bias_mu_param = pyro.param("output_bias_mu", output_bias_mu)
+        output_bias_sigma_param = pyro.param("output_bias_sigma", output_bias_sigma)
+
+        output_bias = pyro.sample(
+            "output.linear.bias",
+            Normal(loc=output_bias_mu_param, scale=output_bias_sigma_param))
 
     def predict_dist(self, X_test, n_predictions, **kwargs):
         predictive = Predictive(self, num_samples=n_predictions)
