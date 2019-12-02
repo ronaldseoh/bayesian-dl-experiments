@@ -1,6 +1,7 @@
 import torch
 from torch.utils.data import Dataset
 
+
 class ToyDatasets(Dataset):
 
     def __init__(self, random_seed=691, n_samples=20,
@@ -17,7 +18,8 @@ class ToyDatasets(Dataset):
         # https://github.com/pawni/BayesByHypernet/blob/master/toy_data.ipynb
         # https://pytorch.org/docs/master/tensors.html#torch.Tensor.uniform_
         # https://pytorch.org/docs/master/tensors.html#torch.Tensor.normal_
-        self.data_x = torch.empty(n_samples, 1).uniform_(x_low, x_high, generator=self._generator)
+        self.data_x = torch.empty(n_samples, 1).uniform_(
+            x_low, x_high, generator=self._generator)
 
         # Construct self.data_y with function values and noise
         self.data_y_function = torch.pow(self.data_x, 3)
@@ -40,7 +42,7 @@ class ToyDatasets(Dataset):
             idx_list = [idx]
         else:
             idx_list = idx
-    
+
         sample = (self.data_x[idx_list], self.data_y[idx_list])
 
         return sample
