@@ -15,6 +15,13 @@ class FCNetMCDropout(FCNet):
             dropout_rate=dropout_rate, dropout_type=dropout_type)
 
     def predict_dist(self, X_test, n_predictions, **kwargs):
+        if 'y_mean' in kwargs:
+            y_mean = kwargs['y_mean']
+            y_std = kwargs['y_std']
+        else:
+            y_mean = 0
+            y_std = 1
+
         was_eval = not self.training
 
         # Temporaily disable eval mode
