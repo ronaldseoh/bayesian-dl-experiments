@@ -62,7 +62,7 @@ class SimpleCIFAR10(nn.Module):
 
         return x
 
-    def predict_dist(self, test_data, n_prediction):
+    def predict_dist(self, test_data, n_prediction=1000):
 
         was_eval = not self.training
 
@@ -123,5 +123,9 @@ class SimpleCIFAR10(nn.Module):
                     metrics['test_ll_mc'] /= 2
 
                 mean_predictions = torch.cat(mean_predictions)
+            else:
+                raise Exception(
+                    'SimpleCIFAR10 predict_dist() '
+                    'only accepts DataLoader test data at the moment.')
 
         return predictions, mean_predictions, metrics
