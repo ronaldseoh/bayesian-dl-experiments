@@ -42,7 +42,8 @@ class FCNetPyro(PyroModule):
         self.input['linear'].bias = PyroSample(normal_like(
             self.input['linear'].bias))
 
-        self.input['linear'].weight = self.input['linear'].weight.to(self.device)
+        self.input['linear'].weight = \
+            self.input['linear'].weight.to(self.device)
         self.input['linear'].bias = self.input['linear'].bias.to(self.device)
 
         # Hidden Layer(s)
@@ -60,13 +61,16 @@ class FCNetPyro(PyroModule):
                 hidden_layer['linear'].bias = PyroSample(
                     normal_like(hidden_layer['linear'].bias))
 
-                hidden_layer['linear'].weight = hidden_layer['linear'].weight.to(self.device)
-                hidden_layer['linear'].bias = hidden_layer['linear'].bias.to(self.device)
+                hidden_layer['linear'].weight = \
+                    hidden_layer['linear'].weight.to(self.device)
+                hidden_layer['linear'].bias = \
+                    hidden_layer['linear'].bias.to(self.device)
 
                 self.hidden_layers.append(hidden_layer)
 
         # Output
-        self.output = PyroModule[nn.Linear](hidden_dim, output_dim).to(self.device)
+        self.output = \
+            PyroModule[nn.Linear](hidden_dim, output_dim).to(self.device)
 
         self.output.weight = PyroSample(normal_like(self.output.weight))
         self.output.bias = PyroSample(normal_like(self.output.bias))
