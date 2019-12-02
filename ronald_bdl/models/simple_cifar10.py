@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.nn.init as init
@@ -82,8 +83,12 @@ class SimpleCIFAR10(nn.Module):
 
                     inputs, targets = data
 
-                    inputs = inputs.to(torch_device)
-                    targets = targets.to(torch_device)
+                    # Determine where our test data needs to be sent to
+                    # by checking the first conv layer weight's location
+                    first_weight_location = self.conv1.weight.device
+
+                    inputs = inputs.to(first_weight_location)
+                    targets = targets.to(first_weight_location)
 
                     raw_scores_batch = torch.stack(
                         [self.forward(inputs) for _ in range(n_prediction)])
@@ -91,7 +96,8 @@ class SimpleCIFAR10(nn.Module):
                     predictions_batch = torch.max(raw_scores_batch, 2).values
 
                     mean_raw_scores_batch = torch.mean(raw_scores_batch, 0)
-                    mean_predictions_batch = torch.argmax(mean_raw_scores_batch, 1)
+                    mean_predictions_batch = torch.argmax(
+                        mean_raw_scores_batch, 1)
                     mean_predictions.append(mean_predictions_batch)
 
                     if was_eval:
@@ -116,6 +122,6 @@ class SimpleCIFAR10(nn.Module):
                         F.cross_entropy(mean_raw_scores_batch, targets))
                     metrics['test_ll_mc'] /= 2
 
-            mean_predictions = torch.cat(mean_predictions)
+                mean_predictions = torch.cat(mean_predictions)
 
         return predictions, mean_predictions, metrics
