@@ -31,6 +31,8 @@ class FCNetMCDropout(FCNet):
         predictions = torch.stack(
             [self.forward(X_test) for _ in range(n_predictions)])
 
+        predictions = predictions * y_std + y_mean
+
         if was_eval:
             self.eval()
 
@@ -44,6 +46,8 @@ class FCNetMCDropout(FCNet):
 
             if 'y_test' in kwargs:
                 y_test = kwargs['y_test']
+                y_test = y_test * y_std + y_mean
+
                 reg_strength = torch.tensor(kwargs['reg_strength'], dtype=torch.float)
 
                 # RMSE
@@ -51,13 +55,14 @@ class FCNetMCDropout(FCNet):
 
                 # RMSE (Non-MC)
                 prediction_non_mc = self.forward(X_test)
+                prediction_non_mc = prediction_non_mc * y_std + y_mean
                 metrics['rmse_non_mc'] = torch.sqrt(torch.mean(torch.pow(y_test - prediction_non_mc, 2)))
 
                 # test log-likelihood
                 metrics['test_ll_mc'] = torch.mean(
                     torch.logsumexp(- torch.tensor(0.5) * reg_strength * torch.pow(y_test[None] - predictions, 2), 0)
                     - torch.log(torch.tensor(n_predictions, dtype=torch.float))
-                    - torch.tensor(0.5) * torch.log(torch.tensor(2 * np.pi, dtype=torch.float)) 
+                    - torch.tensor(0.5) * torch.log(torch.tensor(2 * np.pi, dtype=torch.float))
                     + torch.tensor(0.5) * torch.log(reg_strength)
                 )
 
