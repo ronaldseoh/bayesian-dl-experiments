@@ -33,16 +33,18 @@ def create_nonlinearity_layer_functional(nonlinear_type='relu'):
     elif nonlinear_type == 'sigmoid':
         return F.sigmoid
 
+
 def tau(dropout_rate, length_scale, train_size, reg_strength):
     tau = torch.tensor(
         np.power(length_scale, 2) * (1 - dropout_rate)
         / (2 * train_size * reg_strength))
-    
+
     return tau
+
 
 def reg_strength(dropout_rate, length_scale, train_size, tau):
     reg_strength = torch.tensor(
         np.power(length_scale, 2) * (1 - dropout_rate)
         / (2 * train_size * tau))
-    
+
     return reg_strength
