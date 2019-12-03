@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.init as init
+import numpy as np
 
 from .utils import create_dropout_layer, create_nonlinearity_layer
 
@@ -181,26 +182,32 @@ class FCNet(nn.Module):
                     reg_strength = torch.tensor(
                         kwargs['reg_strength'], dtype=torch.float)
 
+                    train_size = kwargs['train_size']
+
                     # RMSE
                     metrics['rmse_mc'] = torch.sqrt(
                         torch.mean(torch.pow(y_test - mean, 2)))
 
                     # RMSE (Non-MC)
-                    prediction_non_mc = self.forward(X_test)
+                    prediction_non_mc = self.forward(test_data)
                     prediction_non_mc = prediction_non_mc * y_std + y_mean
                     metrics['rmse_non_mc'] = torch.sqrt(
                         torch.mean(torch.pow(y_test - prediction_non_mc, 2)))
 
                     # test log-likelihood
+                    tau = torch.tensor(
+                        (1 - self.dropout_rate) * np.power(1e-2, 2)
+                        / (2 * train_size * reg_strength))
+
                     metrics['test_ll_mc'] = torch.mean(
                         torch.logsumexp(
-                            - torch.tensor(0.5) * reg_strength * torch.pow(
+                            - torch.tensor(0.5) * tau * torch.pow(
                                 y_test[None] - predictions, 2), 0)
                         - torch.log(
-                            torch.tensor(n_predictions, dtype=torch.float))
+                            torch.tensor(n_prediction, dtype=torch.float))
                         - torch.tensor(0.5) * torch.log(
                             torch.tensor(2 * np.pi, dtype=torch.float))
-                        + torch.tensor(0.5) * torch.log(reg_strength)
+                        + torch.tensor(0.5) * torch.log(tau)
                     )
 
         return predictions, mean, var, metrics
