@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.nn.init as init
 
-from .utils import create_dropout_layer
+from .utils import create_dropout_layer, create_nonlinearity_layer_functional
 
 
 class SimpleCIFAR10(nn.Module):
@@ -17,6 +17,15 @@ class SimpleCIFAR10(nn.Module):
         else:
             self.dropout_rate = 0
             self.dropout_type = 'identity'
+
+        # Nonlinear layer setting
+        if 'nonlinear_type' in kwargs:
+            self.nonlinear_type = kwargs['nonlinear_type']
+        else:
+            self.nonlinear_type = 'relu'
+
+        self.nonlinear_function = \
+            create_nonlinearity_layer_functional(self.nonlinear_type)
 
         self.conv1 = nn.Conv2d(3, 6, 5)
 
@@ -53,11 +62,13 @@ class SimpleCIFAR10(nn.Module):
                     init.constant_(m.bias, 0)
 
     def forward(self, x):
-        x = self.pool(F.relu(self.conv1_dropout(self.conv1(x))))
-        x = self.pool(F.relu(self.conv2_dropout(self.conv2(x))))
+        x = self.pool(
+            self.nonlinear_function(self.conv1_dropout(self.conv1(x))))
+        x = self.pool(
+            self.nonlinear_function(self.conv2_dropout(self.conv2(x))))
         x = x.view(-1, 16 * 5 * 5)
-        x = F.relu(self.fc1_dropout(self.fc1(x)))
-        x = F.relu(self.fc2_dropout(self.fc2(x)))
+        x = self.nonlinear_function(self.fc1_dropout(self.fc1(x)))
+        x = self.nonlinear_function(self.fc2_dropout(self.fc2(x)))
         x = self.fc3_dropout(self.fc3(x))
 
         return x

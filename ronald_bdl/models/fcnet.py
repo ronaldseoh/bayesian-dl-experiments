@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.init as init
 
-from .utils import create_dropout_layer
+from .utils import create_dropout_layer, create_nonlinearity_layer
 
 
 class FCNet(nn.Module):
@@ -20,13 +20,19 @@ class FCNet(nn.Module):
             self.dropout_rate = 0
             self.dropout_type = 'identity'
 
+        # Nonlinear layer setting
+        if 'nonlinear_type' in kwargs:
+            self.nonlinear_type = kwargs['nonlinear_type']
+        else:
+            self.nonlinear_type = 'relu'
+
         # Setup layers
         # Input layer
         self.input = nn.ModuleDict({
             'linear': nn.Linear(input_dim, hidden_dim),
             'dropout': create_dropout_layer(
                 self.dropout_rate, self.dropout_type),
-            'relu': nn.ReLU(),
+            'nonlinear': create_nonlinearity_layer(self.nonlinear_type),
         })
 
         # Hidden Layer(s)
@@ -39,7 +45,8 @@ class FCNet(nn.Module):
                         'linear': nn.Linear(hidden_dim, hidden_dim),
                         'dropout': create_dropout_layer(
                             self.dropout_rate, self.dropout_type),
-                        'relu': nn.ReLU(),
+                        'nonlinear': create_nonlinearity_layer(
+                            self.nonlinear_type),
                     })
                 )
 
@@ -54,14 +61,14 @@ class FCNet(nn.Module):
         # Forward through the input layer
         activation = self.input['linear'](X)
         activation = self.input['dropout'](activation)
-        activation = self.input['relu'](activation)
+        activation = self.input['nonlinear'](activation)
 
         # Forward through hidden layers
         if hasattr(self, 'hidden_layers'):
             for hidden in self.hidden_layers:
                 activation = hidden['linear'](activation)
                 activation = hidden['dropout'](activation)
-                activation = hidden['relu'](activation)
+                activation = hidden['nonlinear'](activation)
 
         activation = self.output['linear'](activation)
         activation = self.output['dropout'](activation)
