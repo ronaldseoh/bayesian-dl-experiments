@@ -4,6 +4,7 @@ import torch.nn.init as init
 import numpy as np
 
 from .utils import create_dropout_layer, create_nonlinearity_layer
+from .utils import tau as utils_tau
 
 
 class FCNet(nn.Module):
@@ -179,8 +180,12 @@ class FCNet(nn.Module):
                     y_test = kwargs['y_test']
                     y_test = y_test * y_std + y_mean
 
+                    # Parameters for Tau calculation
                     reg_strength = torch.tensor(
                         kwargs['reg_strength'], dtype=torch.float)
+
+                    length_scale = torch.tensor(
+                        kwargs['length_scale'], dtype=torch.float)
 
                     train_size = kwargs['train_size']
 
@@ -195,9 +200,9 @@ class FCNet(nn.Module):
                         torch.mean(torch.pow(y_test - prediction_non_mc, 2)))
 
                     # test log-likelihood
-                    tau = torch.tensor(
-                        (1 - self.dropout_rate) * np.power(1e-2, 2)
-                        / (2 * train_size * reg_strength))
+                    tau = utils_tau(
+                        self.dropout_rate, length_scale,
+                        train_size, reg_strength)
 
                     metrics['test_ll_mc'] = torch.mean(
                         torch.logsumexp(
